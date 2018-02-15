@@ -13,14 +13,13 @@ export function eventSegments(
   event,
   first,
   last,
-  { startAccessor, endAccessor },
-  range
+  { startAccessor, endAccessor }
 ) {
   let slots = dates.diff(first, last, 'day')
   let start = dates.max(dates.startOf(get(event, startAccessor), 'day'), first)
   let end = dates.min(dates.ceil(get(event, endAccessor), 'day'), last)
 
-  let padding = findIndex(range, x => dates.eq(x, start, 'day'))
+  let padding = dates.diff(first, start, 'day')
   let span = dates.diff(start, end, 'day')
 
   span = Math.min(span, slots)
@@ -65,17 +64,75 @@ export function eventLevels(rowSegments, limit = Infinity) {
   return { levels, extra }
 }
 
+
+/**
+ * check if an event is in the given day range
+ * @param e the event to check
+ * @param start start of range
+ * @param end end of range
+ * @param startAccessor
+ * @param endAccessor
+ * @returns {*}
+ */
 export function inRange(e, start, end, { startAccessor, endAccessor }) {
-  let eStart = dates.startOf(get(e, startAccessor), 'day')
-  let eEnd = get(e, endAccessor)
+  let eStart = dates.startOf(get(e, startAccessor), 'day');
+  let eEnd = get(e, endAccessor);
 
-  let startsBeforeEnd = dates.lte(eStart, end, 'day')
-  // when the event is zero duration we need to handle a bit differently
-  let endsAfterStart = !dates.eq(eStart, eEnd, 'minutes')
-    ? dates.gt(eEnd, start, 'minutes')
-    : dates.gte(eEnd, start, 'minutes')
+  let startsBeforeEnd = dates.lte(eStart, end, 'day');
+  let endsAfterStart = dates.gte(eEnd, start, 'day');
 
-  return startsBeforeEnd && endsAfterStart
+  return startsBeforeEnd && endsAfterStart;
+}
+
+/**
+ * check if an event is in the given date range
+ * @param e the event to check
+ * @param start start of range
+ * @param end end of range
+ * @param startAccessor
+ * @param endAccessor
+ * @returns {*}
+ */
+export function within(e, start, end, { startAccessor, endAccessor }) {
+  let eStart = get(e, startAccessor);
+  let eEnd = get(e, endAccessor);
+
+  let startsBeforeEnd = eStart <= end;
+  let endsAfterStart = eEnd > start;
+
+  return startsBeforeEnd && endsAfterStart;
+}
+
+/**
+ * check if an event is in the given day range
+ * @param e the event to check
+ * @param start start of range
+ * @param end end of range
+ * @param startAccessor
+ * @param endAccessor
+ * @returns {*}
+ */
+
+export function formatAwareInRange(e, start, end, { startAccessor, endAccessor }) {
+  let eStart, eEnd, startsBeforeEnd, endsAfterStart;
+
+  if (e.startType === 'date') {
+    eStart = get(e, startAccessor);
+    startsBeforeEnd = eStart <= end;
+  } else {
+    eStart = dates.startOf(get(e, startAccessor), 'day');
+    startsBeforeEnd = dates.lte(eStart, end, 'day');
+  }
+
+  if (e.endType === 'date') {
+    eEnd = get(e, endAccessor);
+    endsAfterStart = eEnd > start;
+  } else {
+    eEnd = get(e, endAccessor);
+    endsAfterStart = dates.gte(eEnd, start, 'day');
+  }
+
+  return startsBeforeEnd && endsAfterStart;
 }
 
 export function segsOverlap(seg, otherSegs) {

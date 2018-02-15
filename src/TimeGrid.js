@@ -21,7 +21,7 @@ import { notify } from './utils/helpers'
 
 import { accessor as get } from './utils/accessors'
 
-import { inRange, sortEvents, segStyle } from './utils/eventLevels'
+import { formatAwareInRange, sortEvents, segStyle } from './utils/eventLevels'
 
 export default class TimeGrid extends Component {
   static propTypes = {
@@ -171,7 +171,7 @@ export default class TimeGrid extends Component {
       rangeEvents = []
 
     events.forEach(event => {
-      if (inRange(event, start, end, this.props)) {
+      if (formatAwareInRange(event, start, end, this.props)) {
         let eStart = get(event, startAccessor),
           eEnd = get(event, endAccessor)
 
@@ -395,7 +395,6 @@ export default class TimeGrid extends Component {
         >
           {drilldownView ? (
             <a
-              href="#"
               onClick={e => this.handleHeaderClick(date, drilldownView, e)}
             >
               {header}
